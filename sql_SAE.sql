@@ -57,41 +57,40 @@ WHERE f.nomfleur NOT IN (
 
 -- QUESTION R6
 
-SELECT client_id, nomfleur, total_commandee
-FROM (
+SELECT c.NOM AS client_name,
+       t.nomfleur,
+       t.total_commandee FROM (
     SELECT commande.id AS client_id,
            est_compose_de.nomfleur,
            SUM(est_compose_de.nbrfleur) AS total_commandee
     FROM commande
     JOIN est_compose_de ON commande.numcommande = est_compose_de.numcommande
     GROUP BY commande.id, est_compose_de.nomfleur
-    ORDER BY commande.id
 ) t
-WHERE total_commandee = (
+JOIN client c ON c.id = t.client_id
+WHERE t.total_commandee = (
     SELECT MAX(SUM(e2.nbrfleur))
     FROM commande c2
     JOIN est_compose_de e2 ON c2.numcommande = e2.numcommande
     WHERE c2.id = t.client_id
     GROUP BY e2.nomfleur
-); 
+);
+
 
 
 -- QUESTION R7
 
 SELECT
-    com.numcommande,
-    com.datecommande,
-    com1.nom,
-    SUM(ecd.nbrfleur * f.tariffleur) AS montant_commande
-FROM commande com
-JOIN client com1 ON com1.id = com.id
-JOIN est_compose_de ecd ON ecd.numcommande = com.numcommande
-JOIN fleur f ON f.nomfleur = ecd.nomfleur
-GROUP BY
-    com.numcommande,
-    com.datecommande,
-    com1.nom
-ORDER BY com.numcommande;
+    c.numcommande,
+    c.datecommande,
+    cl.nom AS nom_client,
+    SUM(e.nbrfleur * f.tariffleur) AS montant_commande
+FROM commande c
+JOIN client cl ON cl.id = c.id
+JOIN est_compose_de e ON e.numcommande = c.numcommande
+JOIN fleur f ON f.nomfleur = e.nomfleur
+GROUP BY c.numcommande, c.datecommande, cl.nom
+ORDER BY c.numcommande;
 
 
 -- QUESTION R8
